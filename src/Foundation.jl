@@ -256,3 +256,15 @@ function gibbs_state_expanded(M1, M2, J, β)
     ρ_6x6[1:2, 1:2] = ρ_2x2
     return ρ_6x6
 end
+
+"""
+    entangled_state() -> Matrix{ComplexF64}
+
+Bell state |Φ+⟩ = (|00⟩ + |11⟩)/√2 embedded in C⁶ = C³ ⊗ C².
+"""
+function entangled_state()
+    ρ = zeros(ComplexF64, 6, 6)
+    ρ[1,1] = 0.5;  ρ[1,4] = 0.5
+    ρ[4,1] = 0.5;  ρ[4,4] = 0.5
+    return ρ
+end
