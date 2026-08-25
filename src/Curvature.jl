@@ -413,12 +413,49 @@ function calculate_local_curvature(ρ::Matrix{ComplexF64})
     return real(K)
 end
 
-function solve_sld(ρ::AbstractMatrix, Y::AbstractMatrix; tol=1e-12)
+"""
+Solve the SLD equation
+
+    ρ L + L ρ = 2Y
+
+via the vectorised linear system (column-major vec, as in Julia):
+
+    (I ⊗ ρ + ρᵀ ⊗ I) vec(L) = 2 vec(Y)
+
+using vec(AXB) = (Bᵀ ⊗ A) vec(X), so vec(ρL) = (I ⊗ ρ)vec(L) and
+vec(Lρ) = (ρᵀ ⊗ I)vec(L). Note ρᵀ, not ρ: for complex Hermitian ρ these
+differ, and swapping the factors silently solves ρ̄L + Lρ̄ = 2Y instead.
+
+`hermitize=false` (default) returns the raw solution. L comes out Hermitian
+by Theorem B, so residual anti-Hermitian parts are pure round-off (~1e-14)
+and their size is a useful check on the solve. Pass `hermitize=true` to
+project that round-off away in production use — but never in a test that is
+supposed to verify Hermiticity, or the test becomes vacuous.
+
+`pinv` is used so the call does not throw for rank-deficient ρ. Be aware
+that this steps outside Theorem A: when ρ is singular the SLD is *not*
+unique, and pinv silently returns the minimum-norm representative. For
+full-rank ρ the system is nonsingular and pinv agrees with a direct solve.
+
+Using kolom-major vec (the Julia way) , vec(AXB) = (Bᵀ ⊗ A)vec(X). So:
+    vec(ρL) = (I ⊗ ρ)vec(L)
+    vec(Lρ) = (ρᵀ ⊗ I)vec(L)
+"""
+function solve_sld(ρ::AbstractMatrix, Y::AbstractMatrix; tol=1e-12, hermitize=false)
     n = size(ρ, 1)
-    A = kron(I(n), ρ) + kron(transpose(ρ), I(n))
-    L = reshape(pinv(A; atol=tol) * 2*vec(ComplexF64.(Y)), n, n)
-    return (L + L') / 2
+    A = kron(I(n), ρ) + kron(transpose(ρ), I(n)) # dit zou het volgens Claude moeten zijn. zie bovenstaande over kolom-major vec
+    #A = kron(ρ, I(n)) + kron(I(n), transpose(ρ)) # waarschijnlijk fout
+    b = 2 * vec(ComplexF64.(Y))
+    L = reshape(pinv(A; atol=tol) * b, n, n)
+    return hermitize ? (L + L') / 2 : L
 end
+
+#function solve_sld(ρ::AbstractMatrix, Y::AbstractMatrix; tol=1e-12)
+#    n = size(ρ, 1)
+#    A = kron(I(n), ρ) + kron(transpose(ρ), I(n))
+#    L = reshape(pinv(A; atol=tol) * 2*vec(ComplexF64.(Y)), n, n)
+#    return (L + L') / 2
+#end
 
 # ── Curvature-invarianten van M¹·¹·¹ ─────────────────────────────
 
