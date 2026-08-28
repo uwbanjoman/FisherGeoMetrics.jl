@@ -11,7 +11,7 @@ module FisherGeometrics
 
 using QuantumFisher
 using LinearAlgebra
-using Synbolics
+using Symbolics
 using Tullio
 using Printf
 
