@@ -10,7 +10,9 @@ using LinearAlgebra
 
 # ── Constants ────────────────────────────────────────────────
 
-"""τ = 1/5  from 4τ = cos(πτ) — unique real solution."""
+"""τ = 1/(k+2) with k = c₁(ℂP²) = 3 — level quantisation, exactly rational.
+The relation 4τ ≈ cos(πτ) holds to 0.9% but is a numerical coincidence,
+not the defining equation; its exact root is 0.20154."""
 const τ = 1//5
 
 let err = abs(4*Float64(τ) - cos(π*Float64(τ)))
