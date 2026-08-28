@@ -77,6 +77,21 @@ function quantum_fisher(ρ::AbstractMatrix, A::AbstractMatrix, B::AbstractMatrix
 end
 
 """
+    fisher_quantum(ρ, basis)
+
+𝓕_ab = Re Tr(T_a L_b). Symmetrisch en positief-definiet voor ρ van volle rang.
+
+Controle: bij ρ = I/n geldt L_b = n·T_b, dus 𝓕_ab = n·Tr(T_a T_b).
+Met Tr(T_aT_b) = δ_ab/2 geeft dat 𝓕 = (n/2)·I.
+"""
+function fisher_quantum(ρ::AbstractMatrix, basis::Vector{<:AbstractMatrix})
+    L = [solve_sld(ρ, T) for T in basis]
+    n = length(basis)
+    F = [real(tr(basis[a] * L[b])) for a in 1:n, b in 1:n]
+    Symmetric((F .+ F') ./ 2)
+end
+
+"""
     fisher_tensor(ρ) → Matrix{Float64}
 
 Full Fisher information tensor 𝓕_AB in the Gell-Mann basis of su(n).
